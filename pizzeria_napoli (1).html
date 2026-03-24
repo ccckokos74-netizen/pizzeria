@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizzeria Napoli</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#faf9f7;color:#1a1a1a;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:1.5rem 1rem}
+.screen{display:none}.screen.active{display:block}
+h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:#666;margin-bottom:1rem}
+.btn{background:#fff;border:1px solid #ddd;border-radius:10px;padding:9px 16px;font-size:13px;color:#1a1a1a;cursor:pointer;transition:background .12s;font-family:inherit}
+.btn:hover{background:#f0ede8}
+.btn.pri{background:#D85A30;color:#fff;border-color:#D85A30}
+.btn.pri:hover{background:#993C1D}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:1rem 1.25rem}
+.chip{background:#f0ede8;border-radius:8px;padding:5px 11px;font-size:12px;color:#666;display:inline-block}
+.chip b{color:#1a1a1a;font-weight:600}
+.tag{display:inline-block;border-radius:20px;padding:2px 9px;font-size:12px;margin:2px;border:1px solid #ddd;background:#f5f5f5;color:#555}
+.tag.need{border-color:#D85A30;background:#FAECE7;color:#712B13}
+.tag.ok{border-color:#1D9E75;background:#E1F5EE;color:#085041}
+.ing{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;font-size:13px;color:#1a1a1a;cursor:pointer;width:100%;transition:all .12s;font-family:inherit;text-align:left}
+.ing:hover:not(.locked){background:#f5f2ed}
+.ing.on{border-color:#D85A30;background:#FAECE7;color:#712B13}
+.ing.locked{opacity:.35;cursor:not-allowed;pointer-events:none}
+.dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.step{flex:1;text-align:center;padding:6px 4px;border-radius:8px;font-size:11px;border:1px solid #ddd;color:#999}
+.step.act{border-color:#D85A30;background:#FAECE7;color:#712B13;font-weight:600}
+.step.don{border-color:#1D9E75;background:#E1F5EE;color:#085041}
+.prog-bar{height:5px;background:#e8e4de;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .35s}
+.notif{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.7;margin-top:10px}
+.notif.ok{background:#E1F5EE;color:#085041}
+.notif.err{background:#FAECE7;color:#712B13}
+.notif.info{background:#E6F1FB;color:#0C447C}
+.stars{color:#EF9F27;font-size:16px;letter-spacing:2px}
+.xp-bar-wrap{background:#e8e4de;border-radius:3px;height:7px;overflow:hidden;margin:3px 0}
+.xp-bar{height:100%;background:#D85A30;border-radius:3px;transition:width .5s}
+.intro-hero{text-align:center;padding:2rem 0 1.5rem}
+.intro-hero .emoji{font-size:64px;margin-bottom:10px}
+.intro-hero h1{font-size:26px;font-weight:700;margin-bottom:6px}
+.story-box{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:1rem 1.25rem;font-size:14px;color:#555;line-height:1.8;margin:0 auto 1.5rem;text-align:left}
+.intro-btns{display:flex;flex-direction:column;align-items:center;gap:10px}
+.intro-btns .btn{width:200px;padding:12px;font-size:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.hud-left{font-size:14px;font-weight:600}
+.hud-right{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.main-layout{display:flex;gap:16px;align-items:flex-start}
+.pizza-col{flex-shrink:0}
+.right-col{flex:1;min-width:0}
+.ing-scroll{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;max-height:200px;overflow-y:auto}
+canvas{display:block;border-radius:50%;border:1px solid #ddd}
+.shop-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border:1px solid #e8e4de;border-radius:14px}
+.shop-icon{font-size:26px;flex-shrink:0}
+.shop-info{flex:1}
+.shop-info strong{display:block;font-size:14px;margin-bottom:2px}
+.shop-info span{font-size:12px;color:#666}
+.ach-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border:1px solid #e8e4de;border-radius:14px}
+.ach-icon{font-size:24px;flex-shrink:0}
+.ach-info strong{display:block;font-size:14px}
+.ach-info span{font-size:12px;color:#666}
+.end-hero{text-align:center;padding:2rem 0}
+.end-btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- INTRO -->
+<div class="screen active" id="scr-intro">
+  <div class="intro-hero">
+    <div class="emoji">🍕</div>
+    <h1>Pizzeria Napoli</h1>
+    <p style="font-size:14px;color:#666;margin-bottom:1rem">Zostań mistrzem pizzy. Zbuduj swoją legendę.</p>
+  </div>
+  <div class="story-box">Twój dziadek założył Pizzerię Napoli w 1962 roku. Teraz to Ty stoisz za ladą. Zaczynasz od prostych przepisów, ale z każdą pizzą poznajesz nowe smaki i sekrety rzemiosła. Klienci zaczęli mówić o Twojej pizzy — czas zostać legendą!</div>
+  <div class="intro-btns">
+    <button class="btn pri" onclick="startGame()">Zacznij grę</button>
+    <button class="btn" onclick="showScreen('scr-records')">Rekordy</button>
+  </div>
+</div>
+
+<!-- RECORDS -->
+<div class="screen" id="scr-records">
+  <h2>Rekordy</h2>
+  <p class="sub">Twoje najlepsze wyniki</p>
+  <div id="rec-list" style="margin-bottom:1rem"></div>
+  <button class="btn" onclick="showScreen('scr-intro')">← Powrót</button>
+</div>
+
+<!-- LEVEL UP -->
+<div class="screen" id="scr-levelup">
+  <div style="text-align:center;padding:2rem 0">
+    <div style="font-size:52px;margin-bottom:10px">⭐</div>
+    <h2 style="font-size:22px;margin-bottom:4px" id="lu-title">Poziom 2!</h2>
+    <p class="sub" id="lu-sub">Odblokowałeś nowe składniki</p>
+    <div id="lu-unlocks" style="margin:14px 0"></div>
+    <button class="btn pri" style="width:160px;padding:11px" onclick="continueAfterLevelup()">Dalej ✓</button>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div class="screen" id="scr-shop">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <h2>Sklep ulepszeń</h2>
+    <div class="chip">💰 <b id="shop-coins">0</b></div>
+  </div>
+  <p class="sub">Inwestuj monety w pizzerię</p>
+  <div id="shop-items" style="display:grid;gap:10px;margin-bottom:1rem"></div>
+  <button class="btn" onclick="showScreen('scr-game')">← Zamknij sklep</button>
+</div>
+
+<!-- ACHIEVEMENTS -->
+<div class="screen" id="scr-achievements">
+  <h2>Osiągnięcia</h2>
+  <p class="sub">Twoje trofea</p>
+  <div id="ach-list" style="display:grid;gap:8px;margin-bottom:1rem"></div>
+  <button class="btn" onclick="showScreen('scr-game')">← Zamknij</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="scr-game">
+  <div class="hud">
+    <div class="hud-left" id="g-level">Poziom 1</div>
+    <div class="hud-right">
+      <div class="chip">Pkt: <b id="g-score">0</b></div>
+      <div class="chip">💰 <b id="g-coins">0</b></div>
+      <button class="btn" style="padding:5px 10px;font-size:12px" onclick="showScreen('scr-shop')">Sklep</button>
+      <button class="btn" style="padding:5px 10px;font-size:12px" onclick="showScreen('scr-achievements')">Trofea</button>
+    </div>
+  </div>
+  <div style="margin-bottom:5px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:2px">
+      <span id="xp-label">XP: 0 / 120</span>
+      <span id="g-streak">Seria: 0</span>
+    </div>
+    <div class="xp-bar-wrap"><div class="xp-bar" id="xp-bar" style="width:0%"></div></div>
+  </div>
+  <div style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:2px">
+      <span>Zamówienie <span id="g-on">1</span> / ∞</span>
+      <span id="timer-label" style="color:#D85A30;font-weight:600"></span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="timer-bar" style="width:100%;background:#1D9E75"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:10px;padding:10px 14px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px" id="order-name"></div>
+    <div id="order-tags"></div>
+    <div id="customer-line" style="font-size:12px;color:#888;margin-top:6px;font-style:italic"></div>
+  </div>
+  <div class="main-layout">
+    <div class="pizza-col">
+      <canvas id="pc" width="190" height="190"></canvas>
+    </div>
+    <div class="right-col">
+      <div style="display:flex;gap:5px;margin-bottom:10px" id="step-nav"></div>
+      <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em" id="step-label"></div>
+      <div class="ing-scroll" id="ing-grid"></div>
+      <button class="btn pri" id="action-btn" disabled style="width:100%;padding:11px;font-size:14px">Nałóż sos</button>
+      <div id="notif-box" class="notif" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- END -->
+<div class="screen" id="scr-end">
+  <div class="end-hero">
+    <div style="font-size:56px;margin-bottom:8px" id="end-medal"></div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px" id="end-title"></div>
+    <div style="font-size:52px;font-weight:700;margin:6px 0" id="end-score"></div>
+    <div style="font-size:14px;color:#666;margin-bottom:10px" id="end-sub"></div>
+    <div id="end-achs" style="margin-bottom:10px"></div>
+    <div class="end-btns">
+      <button class="btn pri" onclick="startGame()">Zagraj ponownie</button>
+      <button class="btn" onclick="showScreen('scr-intro')">Menu główne</button>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+const SAUCES=[
+  {id:"pomidorowy",label:"Pomidorowy",col:"#C0392B",fill:"#E8735A",lvl:1},
+  {id:"smietanowy",label:"Śmietanowy",col:"#C8A86B",fill:"#FAF0DC",lvl:1},
+  {id:"pesto",label:"Pesto",col:"#27AE60",fill:"#A8D8A8",lvl:2},
+  {id:"bbq",label:"BBQ",col:"#6D3A1A",fill:"#C47A3A",lvl:3},
+  {id:"truflowy",label:"Truflowy",col:"#4A235A",fill:"#D7BDE2",lvl:4},
+];
+const CHEESES=[
+  {id:"mozzarella",label:"Mozzarella",col:"#F9C816",lvl:1},
+  {id:"parmezan",label:"Parmezan",col:"#D4A017",lvl:1},
+  {id:"ricotta",label:"Ricotta",col:"#F5EAC8",lvl:2},
+  {id:"gorgonzola",label:"Gorgonzola",col:"#8FA86A",lvl:2},
+  {id:"cheddar",label:"Cheddar",col:"#E07B20",lvl:3},
+  {id:"pecorino",label:"Pecorino",col:"#C8A000",lvl:4},
+];
+const TOPS=[
+  {id:"pepperoni",label:"Pepperoni",col:"#922B21",shape:"circle",lvl:1},
+  {id:"pieczarki",label:"Pieczarki",col:"#6D4C41",shape:"shroom",lvl:1},
+  {id:"cebula",label:"Cebula",col:"#8E44AD",shape:"ring",lvl:1},
+  {id:"oliwki",label:"Oliwki",col:"#1B5E20",shape:"olive",lvl:1},
+  {id:"szynka",label:"Szynka",col:"#D81B60",shape:"square",lvl:1},
+  {id:"bazylia",label:"Bazylia",col:"#2E7D32",shape:"leaf",lvl:1},
+  {id:"oregano",label:"Oregano",col:"#6D8B3A",shape:"dot",lvl:1},
+  {id:"boczek",label:"Boczek",col:"#C2185B",shape:"square",lvl:1},
+  {id:"rukola",label:"Rukola",col:"#558B2F",shape:"leaf",lvl:2},
+  {id:"jalapenio",label:"Jalapeño",col:"#8BC34A",shape:"pepper",lvl:2},
+  {id:"papryka",label:"Papryka",col:"#E53935",shape:"strip",lvl:2},
+  {id:"ananas",label:"Ananas",col:"#FDD835",shape:"triangle",lvl:2},
+  {id:"kukurydza",label:"Kukurydza",col:"#FBC02D",shape:"dot",lvl:2},
+  {id:"chili",label:"Chili",col:"#B71C1C",shape:"pepper",lvl:2},
+  {id:"szpinak",label:"Szpinak",col:"#388E3C",shape:"leaf",lvl:2},
+  {id:"suszone_pomidory",label:"Susz. pomidory",col:"#C62828",shape:"oval",lvl:3},
+  {id:"karczoch",label:"Karczoch",col:"#558B2F",shape:"leaf",lvl:3},
+  {id:"tunczyk",label:"Tuńczyk",col:"#E0A060",shape:"square",lvl:3},
+  {id:"krewetki",label:"Krewetki",col:"#FF8A65",shape:"shrimp",lvl:3},
+  {id:"kapary",label:"Kapary",col:"#827717",shape:"dot",lvl:3},
+  {id:"anchois",label:"Anchois",col:"#78909C",shape:"strip",lvl:3},
+  {id:"trufla",label:"Trufla",col:"#4A235A",shape:"shroom",lvl:4},
+  {id:"figi",label:"Figi",col:"#7B3F8C",shape:"oval",lvl:4},
+  {id:"burrata",label:"Burrata",col:"#FFF9C4",shape:"circle",lvl:4},
+];
+
+const ALL_ORDERS=[
+  {name:"Margherita",sauce:"pomidorowy",cheese:"mozzarella",tops:["bazylia","oregano"],customer:"Nonna Maria",line:"Proszę, jak robiła moja mama!",lvl:1},
+  {name:"Pepperoni",sauce:"pomidorowy",cheese:"mozzarella",tops:["pepperoni","cebula"],customer:"Tomek",line:"Ostra i tłusta, poproszę!",lvl:1},
+  {name:"Funghi",sauce:"pomidorowy",cheese:"mozzarella",tops:["pieczarki","oregano"],customer:"Pani Zofia",line:"Coś lekkiego na dziś.",lvl:1},
+  {name:"Prosciutto",sauce:"pomidorowy",cheese:"mozzarella",tops:["szynka","bazylia"],customer:"Marco",line:"Come a casa mia!",lvl:1},
+  {name:"Olive",sauce:"pomidorowy",cheese:"mozzarella",tops:["oliwki","cebula","oregano"],customer:"Grażyna",line:"Bez mięsa, dziękuję.",lvl:1},
+  {name:"Quattro Stagioni",sauce:"pomidorowy",cheese:"mozzarella",tops:["szynka","pieczarki","oliwki","karczoch"],customer:"Rodzina Kowalskich",line:"Dla czterech osób — każda część inna!",lvl:2},
+  {name:"Bianca",sauce:"smietanowy",cheese:"ricotta",tops:["szynka","rukola","suszone_pomidory"],customer:"Isabella",line:"Bianco, elegante.",lvl:2},
+  {name:"Diavola",sauce:"pomidorowy",cheese:"mozzarella",tops:["pepperoni","jalapenio","chili"],customer:"Kamil",line:"Daj mi najostrzejszą!",lvl:2},
+  {name:"Hawajska",sauce:"pomidorowy",cheese:"mozzarella",tops:["szynka","ananas","kukurydza"],customer:"Dzieci Wiśniewskich",line:"Słodko-słona, yaay!",lvl:2},
+  {name:"Veggie",sauce:"pesto",cheese:"mozzarella",tops:["szpinak","papryka","pieczarki","cebula"],customer:"Eko Marek",line:"Bez mięsa i bez kompromisów!",lvl:2},
+  {name:"Tonno",sauce:"pomidorowy",cheese:"mozzarella",tops:["tunczyk","cebula","kapary"],customer:"Rybak Staszek",line:"Smak morza na talerzu.",lvl:3},
+  {name:"Carbonara",sauce:"smietanowy",cheese:"parmezan",tops:["boczek","cebula","oregano"],customer:"Filippo",line:"Come carbonara vera!",lvl:3},
+  {name:"Frutti di Mare",sauce:"pomidorowy",cheese:"mozzarella",tops:["krewetki","tunczyk","anchois","kapary"],customer:"Kapitan Nowak",line:"Czuć ocean!",lvl:3},
+  {name:"Rustica",sauce:"pomidorowy",cheese:"mozzarella",tops:["anchois","kapary","oliwki","oregano"],customer:"Stary Antonio",line:"Wiejska, prosta, pyszna.",lvl:3},
+  {name:"BBQ Boczek",sauce:"bbq",cheese:"cheddar",tops:["boczek","cebula","papryka","kukurydza"],customer:"Bartek",line:"Jak na grillu!",lvl:3},
+  {name:"Quattro Formaggi",sauce:"smietanowy",cheese:"gorgonzola",tops:["oregano","bazylia"],customer:"Sommelier Jan",line:"Tylko sery, nic więcej.",lvl:3},
+  {name:"Romana",sauce:"pomidorowy",cheese:"mozzarella",tops:["anchois","suszone_pomidory","bazylia","karczoch"],customer:"Senator Rossi",line:"Tradycja rzymska!",lvl:3},
+  {name:"Prosciutto e Rucola",sauce:"smietanowy",cheese:"parmezan",tops:["szynka","rukola","suszone_pomidory","bazylia"],customer:"Elena",line:"Delikatnie i świeżo.",lvl:3},
+  {name:"Truflowa",sauce:"truflowy",cheese:"pecorino",tops:["trufla","pieczarki","bazylia"],customer:"Hrabia von Berg",line:"Tylko najlepsze trufle!",lvl:4},
+  {name:"Fichi e Prosciutto",sauce:"smietanowy",cheese:"burrata",tops:["figi","szynka","rukola"],customer:"Madame Dupont",line:"C'est magnifique!",lvl:4},
+];
+
+const SHOP_ITEMS=[
+  {id:"extra_time",label:"Dodatkowy czas",desc:"Każde zamówienie +8 sekund",price:25,icon:"⏱",bought:false,effect:function(){G.bonusTime+=8;}},
+  {id:"combo_boost",label:"Combo boost",desc:"Seria x1.5 premii punktów",price:50,icon:"🔥",bought:false,effect:function(){G.comboBoost=1.5;}},
+  {id:"hints",label:"Podpowiedzi x3",desc:"Pokaż brakujący składnik",price:20,icon:"💡",bought:false,effect:function(){G.hints+=3;}},
+  {id:"second_chance",label:"Druga szansa",desc:"Raz możesz poprawić pizzę",price:60,icon:"↩",bought:false,effect:function(){G.secondChance=true;}},
+  {id:"speed_oven",label:"Szybki piec",desc:"Pieczenie 2x szybciej",price:35,icon:"🔆",bought:false,effect:function(){G.fastOven=true;}},
+  {id:"time_freeze",label:"Zamrożenie czasu",desc:"3x pauza timera na 5s",price:40,icon:"❄",bought:false,effect:function(){G.freezes+=3;}},
+];
+
+const ACHIEVEMENTS=[
+  {id:"first_perfect",label:"Pierwsza perfekcja",desc:"Zrób idealną pizzę",icon:"★",unlocked:false,check:function(){return G.perfectCount>=1;}},
+  {id:"streak5",label:"Seria 5",desc:"5 dobrych pizz z rzędu",icon:"🔥",unlocked:false,check:function(){return G.maxStreak>=5;}},
+  {id:"streak10",label:"Seria 10",desc:"10 dobrych pizz z rzędu",icon:"🌋",unlocked:false,check:function(){return G.maxStreak>=10;}},
+  {id:"level3",label:"Kucharz",desc:"Osiągnij poziom 3",icon:"👨‍🍳",unlocked:false,check:function(){return G.level>=3;}},
+  {id:"level5",label:"Mistrz",desc:"Osiągnij poziom 5",icon:"👑",unlocked:false,check:function(){return G.level>=5;}},
+  {id:"coins100",label:"Bogacz",desc:"Zbierz łącznie 100 monet",icon:"💰",unlocked:false,check:function(){return G.totalCoins>=100;}},
+  {id:"orders20",label:"Doświadczony",desc:"Obsłuż 20 zamówień",icon:"📋",unlocked:false,check:function(){return G.totalOrders>=20;}},
+  {id:"orders50",label:"Weteran",desc:"Obsłuż 50 zamówień",icon:"🏆",unlocked:false,check:function(){return G.totalOrders>=50;}},
+  {id:"pure",label:"Puryta",desc:"3 idealne pizze z rzędu",icon:"✨",unlocked:false,check:function(){return G.pureCount>=3;}},
+];
+
+const LEVEL_THRESHOLDS=[0,120,300,550,850,1200,1700,2300];
+const LEVEL_UNLOCKS={
+  2:["Nowe sosy: Pesto","Nowe dodatki: Rukola, Jalapeño, Papryka, Ananas, Kukurydza, Chili, Szpinak"],
+  3:["Nowy sos: BBQ","Nowy ser: Cheddar","Nowe dodatki: Tuńczyk, Krewetki, Kapary, Anchois, Karczoch, Suszone pomidory"],
+  4:["Nowy sos: Truflowy","Nowy ser: Pecorino","Ekskluzywne: Trufla, Figi, Burrata"],
+};
+
+var G={};
+var savedRecords=[];
+try{savedRecords=JSON.parse(localStorage.getItem("piz_rec")||"[]");}catch(e){savedRecords=[];}
+
+var cv=document.getElementById("pc");
+var ctx=cv.getContext("2d");
+var currentOrder=null;
+var orderStartTime=0;
+var bakingInterval=null;
+var judging=false;
+
+function rnd(s){var x=Math.sin(s+1)*10000;return x-Math.floor(x);}
+
+function drawTop(tid,px,py,seed){
+  var t=null;
+  for(var i=0;i<TOPS.length;i++){if(TOPS[i].id===tid){t=TOPS[i];break;}}
+  if(!t)return;
+  ctx.save();ctx.translate(px,py);ctx.rotate(rnd(seed)*Math.PI*2);
+  ctx.fillStyle=t.col;ctx.strokeStyle=t.col;ctx.lineWidth=2.5;
+  switch(t.shape){
+    case"circle":ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();break;
+    case"ring":ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.stroke();break;
+    case"olive":ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.fill();ctx.fillStyle="#111";ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();break;
+    case"square":ctx.beginPath();ctx.rect(-9,-6,18,12);ctx.fill();break;
+    case"leaf":ctx.beginPath();ctx.ellipse(0,0,10,5,0,0,Math.PI*2);ctx.fill();break;
+    case"pepper":ctx.beginPath();ctx.ellipse(0,0,4,10,0,0,Math.PI*2);ctx.fill();break;
+    case"strip":ctx.beginPath();ctx.rect(-4,-10,8,20);ctx.fill();break;
+    case"triangle":ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(8,7);ctx.lineTo(-8,7);ctx.closePath();ctx.fill();break;
+    case"dot":ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();break;
+    case"oval":ctx.beginPath();ctx.ellipse(0,0,9,5,0,0,Math.PI*2);ctx.fill();break;
+    case"shroom":ctx.beginPath();ctx.arc(0,-3,8,Math.PI,0);ctx.fill();ctx.fillStyle="#C8A06A";ctx.beginPath();ctx.rect(-3,-3,6,8);ctx.fill();break;
+    case"shrimp":ctx.beginPath();ctx.arc(0,0,7,0,Math.PI);ctx.fill();break;
+    default:ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPizza(brow){
+  if(brow===undefined)brow=0;
+  ctx.clearRect(0,0,190,190);
+  ctx.beginPath();ctx.arc(95,95,91,0,Math.PI*2);ctx.fillStyle="#D4A054";ctx.fill();
+  ctx.beginPath();ctx.arc(95,95,84,0,Math.PI*2);ctx.fillStyle="#E8C87A";ctx.fill();
+  if(G.sauce){
+    var s=null;for(var i=0;i<SAUCES.length;i++){if(SAUCES[i].id===G.sauce){s=SAUCES[i];break;}}
+    if(s){ctx.beginPath();ctx.arc(95,95,78,0,Math.PI*2);ctx.fillStyle=s.fill;ctx.fill();}
+  }
+  if(G.cheese){
+    var ch=null;for(var i=0;i<CHEESES.length;i++){if(CHEESES[i].id===G.cheese){ch=CHEESES[i];break;}}
+    var chCol=ch?ch.col:"#F9C816";
+    ctx.fillStyle=chCol+"CC";ctx.beginPath();ctx.arc(95,95,76,0,Math.PI*2);ctx.fill();
+    for(var i=0;i<18;i++){
+      var a=rnd(i*7)*Math.PI*2,r=12+rnd(i*3)*50;
+      ctx.beginPath();ctx.ellipse(95+Math.cos(a)*r,95+Math.sin(a)*r,8+rnd(i)*6,5+rnd(i*2)*4,rnd(i*5)*Math.PI,0,Math.PI*2);
+      ctx.fillStyle=chCol+"88";ctx.fill();
+    }
+  }
+  var tops=G.tops||[];
+  for(var ti=0;ti<tops.length;ti++){
+    for(var i=0;i<5;i++){
+      var a=rnd(ti*13+i*7)*Math.PI*2,r=10+rnd(ti*5+i*3)*55;
+      var px=95+Math.cos(a)*r,py=95+Math.sin(a)*r;
+      if(Math.sqrt((px-95)*(px-95)+(py-95)*(py-95))<78)drawTop(tops[ti],px,py,ti*100+i);
+    }
+  }
+  if(brow>0){ctx.beginPath();ctx.arc(95,95,91,0,Math.PI*2);ctx.fillStyle="rgba(100,40,0,"+Math.min(0.45,brow/100*0.45)+")";ctx.fill();}
+  ctx.beginPath();ctx.arc(95,95,91,0,Math.PI*2);ctx.strokeStyle="#B07830";ctx.lineWidth=3;ctx.stroke();
+}
+
+function pickOrder(){
+  var pool=[];
+  for(var i=0;i<ALL_ORDERS.length;i++){if(ALL_ORDERS[i].lvl<=G.level)pool.push(ALL_ORDERS[i]);}
+  if(!pool.length)pool=ALL_ORDERS.slice(0,5);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function startGame(){
+  G={
+    level:1,xp:0,score:0,coins:0,totalCoins:0,streak:0,maxStreak:0,
+    stage:0,sauce:null,cheese:null,tops:[],
+    orderIdx:0,totalOrders:0,perfectCount:0,pureCount:0,fastestTime:9999,
+    timerMax:35,bonusTime:0,timerLeft:0,timerInterval:null,
+    comboBoost:1,hints:0,secondChance:false,fastOven:false,freezes:0,
+    newAchs:[],
+  };
+  for(var i=0;i<SHOP_ITEMS.length;i++)SHOP_ITEMS[i].bought=false;
+  for(var i=0;i<ACHIEVEMENTS.length;i++)ACHIEVEMENTS[i].unlocked=false;
+  judging=false;
+  currentOrder=pickOrder();
+  orderStartTime=Date.now();
+  showScreen('scr-game');
+  drawPizza();
+  renderGameUI();
+  startTimer();
+}
+
+function renderGameUI(){
+  document.getElementById("g-level").textContent="Poziom "+G.level;
+  document.getElementById("g-score").textContent=G.score;
+  document.getElementById("g-coins").textContent=G.coins;
+  document.getElementById("g-streak").textContent="Seria: "+G.streak+(G.streak>=3?" 🔥":"");
+  document.getElementById("g-on").textContent=G.orderIdx+1;
+  var xpNeeded=LEVEL_THRESHOLDS[G.level]||9999;
+  var xpPrev=LEVEL_THRESHOLDS[G.level-1]||0;
+  var range=xpNeeded-xpPrev;
+  var pct=range>0?Math.min(100,Math.round((G.xp-xpPrev)/range*100)):100;
+  document.getElementById("xp-label").textContent="XP: "+G.xp+" / "+xpNeeded;
+  document.getElementById("xp-bar").style.width=pct+"%";
+  document.getElementById("shop-coins").textContent=G.coins;
+  renderOrderCard();
+  renderStepNav();
+  renderIngGrid();
+}
+
+function renderOrderCard(){
+  if(!currentOrder)return;
+  document.getElementById("order-name").textContent="🧑 "+currentOrder.customer+" zamawia: Pizza "+currentOrder.name;
+  document.getElementById("customer-line").textContent='"'+currentOrder.line+'"';
+  var html='<span class="tag need">sos: '+currentOrder.sauce.replace("smietanowy","śmietanowy")+'</span>';
+  html+='<span class="tag need">ser: '+currentOrder.cheese+'</span>';
+  for(var i=0;i<currentOrder.tops.length;i++){
+    var label=currentOrder.tops[i];
+    for(var j=0;j<TOPS.length;j++){if(TOPS[j].id===label){label=TOPS[j].label;break;}}
+    html+='<span class="tag need">'+label+'</span>';
+  }
+  document.getElementById("order-tags").innerHTML=html;
+}
+
+function renderStepNav(){
+  var labels=["1. Sos","2. Ser","3. Dodatki","4. Piec"];
+  var html="";
+  for(var i=0;i<labels.length;i++){
+    var cls="step"+(i===G.stage?" act":i<G.stage?" don":"");
+    html+='<div class="'+cls+'">'+labels[i]+'</div>';
+  }
+  document.getElementById("step-nav").innerHTML=html;
+}
+
+function renderIngGrid(){
+  var grid=document.getElementById("ing-grid");
+  var lbl=document.getElementById("step-label");
+  var btn=document.getElementById("action-btn");
+  grid.innerHTML="";
+
+  if(G.stage===0){
+    lbl.textContent="Wybierz sos:";
+    for(var i=0;i<SAUCES.length;i++){
+      (function(s){
+        grid.appendChild(makeIng(s.label,s.col,G.sauce===s.id,s.lvl>G.level,function(){G.sauce=s.id;drawPizza();renderIngGrid();}));
+      })(SAUCES[i]);
+    }
+    btn.textContent="Nałóż sos →";btn.disabled=!G.sauce;
+
+  }else if(G.stage===1){
+    lbl.textContent="Wybierz ser:";
+    for(var i=0;i<CHEESES.length;i++){
+      (function(c){
+        grid.appendChild(makeIng(c.label,c.col,G.cheese===c.id,c.lvl>G.level,function(){G.cheese=c.id;drawPizza();renderIngGrid();}));
+      })(CHEESES[i]);
+    }
+    btn.textContent="Nałóż ser →";btn.disabled=!G.cheese;
+
+  }else if(G.stage===2){
+    lbl.textContent="Dodatki ("+G.tops.length+" wybranych):";
+    if(G.hints>0&&currentOrder){
+      var missing=null;
+      for(var i=0;i<currentOrder.tops.length;i++){
+        if(G.tops.indexOf(currentOrder.tops[i])<0){missing=currentOrder.tops[i];break;}
+      }
+      if(missing){
+        var hb=document.createElement("button");
+        hb.className="btn";
+        hb.style.cssText="font-size:12px;padding:5px 8px;grid-column:span 2;margin-bottom:4px;width:100%";
+        var missingLabel=missing;
+        for(var j=0;j<TOPS.length;j++){if(TOPS[j].id===missing){missingLabel=TOPS[j].label;break;}}
+        hb.textContent="💡 Podpowiedź ("+G.hints+" pozostało)";
+        (function(ml){hb.onclick=function(){showNotif("Dodaj: "+ml,"info");G.hints--;renderIngGrid();};})(missingLabel);
+        grid.appendChild(hb);
+      }
+    }
+    if(G.freezes>0){
+      var fb=document.createElement("button");
+      fb.className="btn";
+      fb.style.cssText="font-size:12px;padding:5px 8px;grid-column:span 2;margin-bottom:4px;width:100%";
+      fb.textContent="❄ Zamroź czas ("+G.freezes+" pozostało)";
+      fb.onclick=function(){freezeTimer();G.freezes--;renderIngGrid();};
+      grid.appendChild(fb);
+    }
+    for(var i=0;i<TOPS.length;i++){
+      (function(t){
+        grid.appendChild(makeIng(t.label,t.col,G.tops.indexOf(t.id)>=0,t.lvl>G.level,function(){
+          var idx=G.tops.indexOf(t.id);
+          if(idx>=0)G.tops.splice(idx,1);
+          else G.tops.push(t.id);
+          drawPizza();renderIngGrid();
+        }));
+      })(TOPS[i]);
+    }
+    btn.textContent="Wsuń do pieca →";btn.disabled=G.tops.length===0;
+
+  }else{
+    lbl.textContent="Pizza w piecu!";
+    btn.textContent="Wydaj i oceń! ✓";btn.disabled=false;
+  }
+  btn.onclick=handleAction;
+}
+
+function makeIng(label,col,active,locked,cb){
+  var b=document.createElement("button");
+  b.className="ing"+(active?" on":"")+(locked?" locked":"");
+  b.innerHTML='<span class="dot" style="background:'+col+'"></span>'+label+(locked?" 🔒":"");
+  if(!locked)b.onclick=cb;
+  return b;
+}
+
+function handleAction(){
+  if(judging)return;
+  if(G.stage===0&&G.sauce){G.stage=1;}
+  else if(G.stage===1&&G.cheese){G.stage=2;}
+  else if(G.stage===2&&G.tops.length>0){G.stage=3;startBake();}
+  else if(G.stage===3){judgeOrder();return;}
+  else return;
+  renderStepNav();renderIngGrid();
+}
+
+function startBake(){
+  stopTimer();
+  if(bakingInterval)clearInterval(bakingInterval);
+  var t=0;var spd=G.fastOven?8:4;
+  bakingInterval=setInterval(function(){
+    t+=spd;drawPizza(t);
+    if(t>=100){clearInterval(bakingInterval);bakingInterval=null;}
+  },40);
+}
+
+function startTimer(){
+  stopTimer();
+  G.timerLeft=G.timerMax+G.bonusTime;
+  updateTimerUI();
+  G.timerInterval=setInterval(function(){
+    G.timerLeft-=0.1;
+    if(G.timerLeft<0)G.timerLeft=0;
+    updateTimerUI();
+    if(G.timerLeft<=0){stopTimer();timeOut();}
+  },100);
+}
+
+function stopTimer(){
+  if(G.timerInterval){clearInterval(G.timerInterval);G.timerInterval=null;}
+}
+
+function freezeTimer(){
+  stopTimer();
+  showNotif("Timer zamrożony na 5 sekund! ❄","info");
+  setTimeout(function(){if(G.stage<3)startTimer();},5000);
+}
+
+function updateTimerUI(){
+  var max=G.timerMax+G.bonusTime;
+  var pct=Math.max(0,G.timerLeft/max*100);
+  var bar=document.getElementById("timer-bar");
+  bar.style.width=pct+"%";
+  bar.style.background=pct>50?"#1D9E75":pct>25?"#EF9F27":"#E24B4A";
+  document.getElementById("timer-label").textContent=Math.ceil(G.timerLeft)+"s";
+}
+
+function timeOut(){
+  if(judging)return;
+  G.streak=0;
+  showNotif("⏰ Czas minął! Klient wyszedł...","err");
+  setTimeout(function(){nextOrder();},2000);
+}
+
+function judgeOrder(){
+  if(judging)return;
+  judging=true;
+  stopTimer();
+  var elapsed=(Date.now()-orderStartTime)/1000;
+  if(elapsed<G.fastestTime)G.fastestTime=elapsed;
+
+  var o=currentOrder;
+  var pts=0;var msgs=[];
+  var sauceOk=G.sauce===o.sauce;
+  var cheeseOk=G.cheese===o.cheese;
+  var hit=0;
+  for(var i=0;i<o.tops.length;i++){if(G.tops.indexOf(o.tops[i])>=0)hit++;}
+  var extra=0;
+  for(var i=0;i<G.tops.length;i++){if(o.tops.indexOf(G.tops[i])<0)extra++;}
+  var perfect=sauceOk&&cheeseOk&&hit===o.tops.length&&extra===0;
+
+  if(sauceOk){pts+=3;msgs.push("Sos ✓ +3");}else msgs.push("Sos ✗ +0");
+  if(cheeseOk){pts+=3;msgs.push("Ser ✓ +3");}else msgs.push("Ser ✗ +0");
+  var tp=Math.max(0,hit-extra)*2;pts+=tp;
+  msgs.push("Dodatki: "+hit+"/"+o.tops.length+" trafnych, "+extra+" zbędnych +"+tp);
+
+  var timeBonus=G.timerLeft>G.timerMax*0.7?2:G.timerLeft>G.timerMax*0.4?1:0;
+  if(timeBonus>0){pts+=timeBonus;msgs.push("Szybko! +"+timeBonus);}
+
+  if(perfect){G.perfectCount++;G.pureCount++;G.streak++;}
+  else if(pts>=6){G.streak++;G.pureCount=0;}
+  else{G.streak=0;G.pureCount=0;}
+  if(G.streak>G.maxStreak)G.maxStreak=G.streak;
+
+  var mult=G.streak>=3?G.comboBoost:1;
+  var finalPts=Math.round(pts*mult);
+  var coins=Math.floor(finalPts/2)+(perfect?5:0);
+  G.score+=finalPts;G.coins+=coins;G.totalCoins+=coins;
+  G.xp+=finalPts*5;G.totalOrders++;
+
+  checkLevelUp();
+  checkAchievements();
+
+  var starsN=perfect?3:pts>=6?2:pts>=3?1:0;
+  var stars="★★★☆☆☆".substr(0,starsN)+"☆☆☆".substr(0,3-starsN);
+  var comboMsg=G.streak>=3?"<br>🔥 Seria "+G.streak+"x — bonus!":"";
+  var type=pts>=6?"ok":"err";
+  showNotif('<span class="stars">'+stars+'</span> '+msgs.join(" | ")+"<br>+"+finalPts+" pkt &nbsp; +"+coins+" monet"+comboMsg,type);
+
+  renderGameUI();
+  setTimeout(function(){nextOrder();},2600);
+}
+
+function nextOrder(){
+  judging=false;
+  hideNotif();
+  G.stage=0;G.sauce=null;G.cheese=null;G.tops=[];G.orderIdx++;
+  currentOrder=pickOrder();
+  orderStartTime=Date.now();
+  drawPizza();renderGameUI();startTimer();
+}
+
+function checkLevelUp(){
+  var next=LEVEL_THRESHOLDS[G.level];
+  if(next&&G.xp>=next&&G.level<8){
+    G.level++;stopTimer();showLevelUp();
+  }
+}
+
+function showLevelUp(){
+  document.getElementById("lu-title").textContent="Poziom "+G.level+"!";
+  var unlocks=LEVEL_UNLOCKS[G.level];
+  document.getElementById("lu-sub").textContent=unlocks?"Odblokowałeś nowe składniki!":"Jesteś coraz lepszy!";
+  var html="";
+  if(unlocks){
+    for(var i=0;i<unlocks.length;i++){
+      html+='<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:10px;padding:7px 14px;font-size:13px;color:#085041;margin:5px auto;max-width:320px">'+unlocks[i]+'</div>';
+    }
+  }
+  document.getElementById("lu-unlocks").innerHTML=html;
+  showScreen('scr-levelup');
+}
+
+function continueAfterLevelup(){
+  showScreen('scr-game');
+  renderGameUI();
+  startTimer();
+}
+
+function checkAchievements(){
+  for(var i=0;i<ACHIEVEMENTS.length;i++){
+    var a=ACHIEVEMENTS[i];
+    if(!a.unlocked&&a.check()){a.unlocked=true;G.newAchs.push(a);}
+  }
+}
+
+function showEnd(){
+  saveRecord();
+  var pct=G.totalOrders>0?Math.round(G.score/(G.totalOrders*9)*100):0;
+  var medal=pct>=80?"🏆":pct>=60?"⭐":"🍕";
+  var rank=G.level>=5?"Mistrz Pizzy":G.level>=3?"Dobry Pizzaiolo":G.level>=2?"Kucharz":"Praktykant";
+  document.getElementById("end-medal").textContent=medal;
+  document.getElementById("end-title").textContent=rank;
+  document.getElementById("end-score").textContent=G.score+" pkt";
+  document.getElementById("end-sub").textContent="Poziom "+G.level+" • "+G.totalOrders+" zamówień • Najlepsza seria: "+G.maxStreak;
+  var achHtml="";
+  for(var i=0;i<G.newAchs.length;i++){
+    achHtml+='<div style="display:inline-block;background:#FAEEDA;border:1px solid #EF9F27;border-radius:20px;padding:4px 12px;font-size:12px;color:#633806;margin:3px">'+G.newAchs[i].icon+" "+G.newAchs[i].label+'</div>';
+  }
+  if(achHtml)achHtml='<div style="margin-bottom:8px;font-size:13px;color:#666">Nowe osiągnięcia:</div>'+achHtml;
+  document.getElementById("end-achs").innerHTML=achHtml;
+  showScreen('scr-end');
+}
+
+function showNotif(msg,type){
+  var n=document.getElementById("notif-box");
+  n.className="notif "+type;n.innerHTML=msg;n.style.display="block";
+}
+function hideNotif(){
+  var n=document.getElementById("notif-box");
+  n.style.display="none";
+}
+
+function showScreen(id){
+  var screens=document.querySelectorAll(".screen");
+  for(var i=0;i<screens.length;i++)screens[i].classList.remove("active");
+  document.getElementById(id).classList.add("active");
+  if(id==="scr-shop")renderShop();
+  if(id==="scr-achievements")renderAchievements();
+  if(id==="scr-records")renderRecords();
+}
+
+function renderShop(){
+  document.getElementById("shop-coins").textContent=G.coins;
+  var html="";
+  for(var i=0;i<SHOP_ITEMS.length;i++){
+    var item=SHOP_ITEMS[i];
+    var canBuy=!item.bought&&G.coins>=item.price;
+    html+='<div class="shop-item">';
+    html+='<div class="shop-icon">'+item.icon+'</div>';
+    html+='<div class="shop-info"><strong>'+item.label+'</strong><span>'+item.desc+'</span></div>';
+    html+='<button class="btn'+(canBuy?" pri":"")+'" '+(item.bought||!canBuy?"disabled":"")+' onclick="buyItem('+i+')">';
+    html+=item.bought?"✓ Kupiono":"💰 "+item.price;
+    html+='</button></div>';
+  }
+  document.getElementById("shop-items").innerHTML=html;
+}
+
+function buyItem(i){
+  var item=SHOP_ITEMS[i];
+  if(item.bought||G.coins<item.price)return;
+  G.coins-=item.price;item.bought=true;item.effect();
+  renderShop();
+  document.getElementById("g-coins").textContent=G.coins;
+}
+
+function renderAchievements(){
+  var html="";
+  for(var i=0;i<ACHIEVEMENTS.length;i++){
+    var a=ACHIEVEMENTS[i];
+    html+='<div class="ach-item" style="opacity:'+(a.unlocked?1:0.45)+'">';
+    html+='<div class="ach-icon">'+a.icon+'</div>';
+    html+='<div class="ach-info"><strong>'+a.label+'</strong><span>'+a.desc+'</span></div>';
+    if(a.unlocked)html+='<div style="margin-left:auto;font-size:12px;background:#E1F5EE;color:#085041;padding:3px 10px;border-radius:20px">✓</div>';
+    html+='</div>';
+  }
+  document.getElementById("ach-list").innerHTML=html;
+}
+
+function renderRecords(){
+  var list=document.getElementById("rec-list");
+  if(!savedRecords.length){
+    list.innerHTML='<div style="color:#888;font-size:13px;padding:1rem 0">Brak rekordów. Zagraj, żeby je ustawić!</div>';return;
+  }
+  var html="";
+  for(var i=0;i<Math.min(savedRecords.length,10);i++){
+    var r=savedRecords[i];
+    html+='<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px">';
+    html+='<div style="font-size:18px;font-weight:700;color:#bbb;min-width:24px">'+(i+1)+'</div>';
+    html+='<div style="flex:1"><div style="font-size:15px;font-weight:700">'+r.score+' pkt</div>';
+    html+='<div style="font-size:12px;color:#888">Poziom '+r.level+' • '+r.orders+' zamówień • '+r.date+'</div></div></div>';
+  }
+  list.innerHTML=html;
+}
+
+function saveRecord(){
+  savedRecords.push({score:G.score,level:G.level,orders:G.totalOrders,date:new Date().toLocaleDateString("pl")});
+  savedRecords.sort(function(a,b){return b.score-a.score;});
+  savedRecords=savedRecords.slice(0,10);
+  try{localStorage.setItem("piz_rec",JSON.stringify(savedRecords));}catch(e){}
+}
+
+drawPizza();
+</script>
+</body>
+</html>
